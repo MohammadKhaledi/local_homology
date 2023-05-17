@@ -4,10 +4,12 @@ from numpy import cos, sin
 import matplotlib.pyplot as plt
 from libs.XY_model import XYSystem
 from tqdm import tqdm
+import numba as nb
 
 # %%
 
 
+@nb.njit
 def get_curl(x):
     N = x.shape[0]
     curl = []
@@ -44,6 +46,7 @@ def get_curl(x):
 # %%
 
 
+@nb.njit
 def find_local_ext(x):
     N = x.shape[0]
     maxima = []
@@ -65,9 +68,9 @@ def find_local_ext(x):
 # %%
 
 
+@nb.njit
 def find_distribution(cu, min_loc, max_loc, max_dist, bins=200):
     p = np.zeros(bins)
-    c = np.zeros(bins)
     dr = (max_dist / (bins - 1))
     for i in range(max_loc.shape[0]):
         for j in range(min_loc.shape[0]):
@@ -75,11 +78,25 @@ def find_distribution(cu, min_loc, max_loc, max_dist, bins=200):
                  (max_loc[i, 1] - min_loc[j, 1])**2)**(0.5)
             r = (int)(d / dr)
             p[r] += 1
-            c[r] += (cu[max_loc[i, 0], max_loc[i, 1]]
-                     * cu[min_loc[j, 0], min_loc[j, 1]])
     p /= (sum(p) * dr)
-    c /= (sum(c) * dr)
-    return p, c
+    return p
+
+# %%
+
+
+@nb.njit
+def find_correlation(cu, max_dist, bins=100):
+    c = np.zeros(bins)
+    dr = (max_dist / (bins - 1))
+    for i in range(cu.shape[0] - 1):
+        for j in range(cu.shape[1] - 1):
+            for m in range(i+1, cu.shape[0]):
+                for n in range(j+1, cu.shape[1]):
+                    d = ((i - m)**2 + (j - n)**2)**0.5
+                    r = (int)(d / max_dist)
+                    c[r] += (cu[i, j] * cu[m, n])
+    c /= (np.sum(c) * dr)
+    return c
 
 # %%
 
@@ -125,7 +142,7 @@ def do_monte_carlo(temp, N):
 
 
 # %%
-temp = [0.05, 0.2, 0.6, 0.9, 1.1, 1.5]
+temp = [0.05, 0.2, 0.6, 0.9, 1.5]
 N = 64
 ensemble = 100
 bins = 500
@@ -140,10 +157,9 @@ for i in range(len(temp)):
         x = do_monte_carlo(temp[i], N)
         cu = get_curl(x)
         maxima, minima, max_cu, min_cu = find_local_ext(cu)
-        pp, cc = find_distribution(
-            cu, minima, maxima, ((N**2) + (N**2))**(0.5), bins)
-        p += pp
-        c += cc
+        p += find_distribution(cu, minima, maxima,
+                               ((N**2) + (N**2))**(0.5), bins)
+        c += find_correlation(cu, ((N**2) + (N**2))**(0.5), bins)
         # if(e == 1):
         #     plot_heatmap(x, cu, temp[i], f'mix_{temp[i]}_{N}')
         #     plot_heatmap(x, max_cu, temp[i], f'maxima_{temp[i]}_{N}', False, True)
