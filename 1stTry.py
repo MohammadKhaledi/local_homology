@@ -125,18 +125,18 @@ def do_monte_carlo(temp, N):
 
 
 # %%
-temp = [0.05, 0.2, 0.6, 0.9, 1.5]
+temp = [0.05, 0.2, 0.6, 0.9, 1.1, 1.5]
 N = 64
-ensemble = 1000
+ensemble = 100
 bins = 500
 P_r = []
 C_r = []
 
 # %%
-for i in tqdm(range(len(temp))):
+for i in range(len(temp)):
     p = np.zeros(bins)
     c = np.zeros(bins)
-    for e in range(1, ensemble+1):
+    for e in tqdm(range(1, ensemble+1)):
         x = do_monte_carlo(temp[i], N)
         cu = get_curl(x)
         maxima, minima, max_cu, min_cu = find_local_ext(cu)
