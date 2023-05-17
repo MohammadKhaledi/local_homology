@@ -46,7 +46,6 @@ def get_curl(x):
 # %%
 
 
-@nb.njit
 def find_local_ext(x):
     N = x.shape[0]
     maxima = []
