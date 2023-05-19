@@ -52,8 +52,8 @@ def find_local_ext(x):
     maxim_cu = np.zeros([N, N])
     minima = []
     minim_cu = np.zeros([N, N])
-    up_th = np.max(x) * 0.6
-    down_th = np.min(x) * 0.6
+    up_th = np.max(x) * 0.5
+    down_th = np.min(x) * 0.5
     for i in range(N):
         for j in range(N):
             if (x[i, j] >= up_th):
@@ -141,9 +141,9 @@ def do_monte_carlo(temp, N):
 
 
 # %%
-temp = [0.05, 0.2, 0.6, 0.9, 1.5]
-N = 64
-ensemble = 100
+temp = [0.05, 0.2, 0.6, 0.9, 1.1, 1.5]
+N = 32
+ensemble = 1000
 bins = 500
 P_r = []
 C_r = []
