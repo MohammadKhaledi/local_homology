@@ -66,10 +66,10 @@ def find_local_ext(x):
 
 # %%
 
-
 @nb.njit
 def find_distribution(cu, min_loc, max_loc, max_dist, bins=200):
     p = np.zeros(bins)
+    c = np.zeros(bins)
     dr = (max_dist / (bins - 1))
     for i in range(max_loc.shape[0]):
         for j in range(min_loc.shape[0]):
@@ -77,8 +77,10 @@ def find_distribution(cu, min_loc, max_loc, max_dist, bins=200):
                  (max_loc[i, 1] - min_loc[j, 1])**2)**(0.5)
             r = (int)(d / dr)
             p[r] += 1
+            c[r] += (cu[max_loc[i, 0], min_loc[j, 1]] * cu[max_loc[i, 0], min_loc[j, 1]])
     p /= (sum(p) * dr)
-    return p
+    c /= (sum(c) * dr)
+    return np.cumsum(p), np.cumsum(c)
 
 # %%
 
@@ -141,10 +143,10 @@ def do_monte_carlo(temp, N):
 
 
 # %%
-temp = [0.05, 0.2, 0.6, 0.9, 1.1, 1.5]
-N = 32
-ensemble = 1000
-bins = 500
+temp = [0.1, 0.89, 1.5]
+N = 64
+ensemble = 500
+bins = 200
 P_r = []
 C_r = []
 
@@ -156,15 +158,16 @@ for i in range(len(temp)):
         x = do_monte_carlo(temp[i], N)
         cu = get_curl(x)
         maxima, minima, max_cu, min_cu = find_local_ext(cu)
-        p += find_distribution(cu, minima, maxima,
+        pp, cc = find_distribution(cu, minima, maxima,
                                ((N**2) + (N**2))**(0.5), bins)
-        c += find_correlation(cu, ((N**2) + (N**2))**(0.5), bins)
-        # if(e == 1):
-        #     plot_heatmap(x, cu, temp[i], f'mix_{temp[i]}_{N}')
-        #     plot_heatmap(x, max_cu, temp[i], f'maxima_{temp[i]}_{N}', False, True)
-        #     plot_heatmap(x, min_cu, temp[i], f'minima_{temp[i]}_{N}', False, True)
-        #     plot_heatmap(x, cu, temp[i], f'vec_{temp[i]}_{N}', False)
-        #     plot_heatmap(x, cu, temp[i], f'curl_{temp[i]}_{N}', False, True)
+        p += pp
+        c += cc
+        if(e == 1):
+             plot_heatmap(x, cu, temp[i], f'mix_{temp[i]}_{N}')
+             plot_heatmap(x, max_cu, temp[i], f'maxima_{temp[i]}_{N}', False, True)
+             plot_heatmap(x, min_cu, temp[i], f'minima_{temp[i]}_{N}', False, True)
+             plot_heatmap(x, cu, temp[i], f'vec_{temp[i]}_{N}', False)
+             plot_heatmap(x, cu, temp[i], f'curl_{temp[i]}_{N}', False, True)
 
     p /= ensemble
     c /= ensemble
