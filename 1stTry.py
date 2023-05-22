@@ -52,8 +52,8 @@ def find_local_ext(x):
     maxim_cu = np.zeros([N, N])
     minima = []
     minim_cu = np.zeros([N, N])
-    up_th = np.max(x) * 0.5
-    down_th = np.min(x) * 0.5
+    up_th = np.max(x) * 0.8
+    down_th = np.min(x) * 0.8
     for i in range(N):
         for j in range(N):
             if (x[i, j] >= up_th):
@@ -77,7 +77,7 @@ def find_distribution(cu, min_loc, max_loc, max_dist, bins=200):
                  (max_loc[i, 1] - min_loc[j, 1])**2)**(0.5)
             r = (int)(d / dr)
             p[r] += 1
-            c[r] += (cu[max_loc[i, 0], min_loc[j, 1]] * cu[max_loc[i, 0], min_loc[j, 1]])
+            c[r] += (cu[max_loc[i, 0], max_loc[i, 1]] * cu[min_loc[j, 0], min_loc[j, 1]])
     p /= (sum(p) * dr)
     c /= (sum(c) * dr)
     return np.cumsum(p), np.cumsum(c)
@@ -144,8 +144,8 @@ def do_monte_carlo(temp, N):
 
 # %%
 temp = [0.1, 0.89, 1.5]
-N = 64
-ensemble = 500
+N = 100
+ensemble = 100
 bins = 200
 P_r = []
 C_r = []
